@@ -1,5 +1,5 @@
 extern crate sdl2;
-
+use rand::{thread_rng, Rng};
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
@@ -26,7 +26,12 @@ pub enum PlayerDirection {
 }
 #[derive(Copy, Clone)]
 pub struct Point(pub i32, pub i32);
-
+//
+impl PartialEq<Point> for Point {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0 && self.1 == other.1
+    }
+}
 impl Add<Point> for Point {
     type Output = Point;
 
@@ -54,7 +59,6 @@ impl Renderer {
         Ok(())
     }
 
-    // Draw initial game state manually
     pub fn draw(&mut self, context: &GameContext) -> Result<(), String> {
         self.draw_background(context);
         self.draw_player(context)?;
@@ -116,6 +120,24 @@ impl GameContext {
             PlayerDirection::Right => *head_position + Point(1, 0),
             PlayerDirection::Left => *head_position + Point(-1, 0),
         };
+
+        if self.food == next_head_position {
+            // TODO: Make better maybe?
+            let y_rand = thread_rng().gen_range(0..GRID_Y_SIZE);
+            let x_rand = thread_rng().gen_range(0..GRID_X_SIZE);
+            self.food = Point(x_rand as i32, y_rand as i32);
+            //TODO: Do something
+            // Make tail grow 1 and add point to points
+            let new_tail_position = *self.player_position.last().unwrap() + Point(0, 1);
+            self.player_position.push(new_tail_position);
+        }
+        /*
+         *  t1
+         *  t2 t3 t4
+         *  t4    h
+         *  t3 t2 t1
+         *
+         */
 
         self.player_position.pop();
         self.player_position.reverse();
